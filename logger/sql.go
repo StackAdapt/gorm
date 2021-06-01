@@ -19,6 +19,12 @@ const (
 	nullStr     = "NULL"
 )
 
+var (
+	escapeMap = map[string]bool{
+		`\`: true,
+	}
+)
+
 func isPrintable(s []byte) bool {
 	for _, r := range s {
 		if !unicode.IsPrint(rune(r)) {
@@ -80,7 +86,12 @@ func ExplainSQL(sql string, numericPlaceholder *regexp.Regexp, escaper string, a
 		case float64, float32:
 			vars[idx] = strconv.FormatFloat(v.(float64), 'f', -1, 64)
 		case string:
-			vars[idx] = escaper + strings.Replace(v, escaper, "\\"+escaper, -1) + escaper
+			middle := v
+			for escChar := range escapeMap {
+				middle = strings.ReplaceAll(middle, escChar, `\`+escChar)
+			}
+			middle = strings.ReplaceAll(middle, escaper, `\`+escaper)
+			vars[idx] = escaper + middle + escaper
 		default:
 			rv := reflect.ValueOf(v)
 			if v == nil || !rv.IsValid() || rv.Kind() == reflect.Ptr && rv.IsNil() {
