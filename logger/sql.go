@@ -39,8 +39,6 @@ var convertibleTypes = []reflect.Type{reflect.TypeOf(time.Time{}), reflect.TypeO
 func ExplainSQL(sql string, numericPlaceholder *regexp.Regexp, escaper string, avars ...interface{}) string {
 	var convertParams func(interface{}, int)
 	var vars = make([]string, len(avars))
-	escapeMap[escaper] = true
-	defer delete(escapeMap, escaper)
 
 	convertParams = func(v interface{}, idx int) {
 		switch v := v.(type) {
@@ -92,6 +90,7 @@ func ExplainSQL(sql string, numericPlaceholder *regexp.Regexp, escaper string, a
 			for escChar := range escapeMap {
 				middle = strings.ReplaceAll(middle, escChar, `\`+escChar)
 			}
+			middle = strings.ReplaceAll(middle, escaper, `\`+escaper)
 			vars[idx] = escaper + middle + escaper
 		default:
 			rv := reflect.ValueOf(v)
