@@ -3,6 +3,7 @@ package logger
 import (
 	"database/sql/driver"
 	"fmt"
+	"log"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -134,9 +135,12 @@ func ExplainSQL(sql string, numericPlaceholder *regexp.Regexp, escaper string, a
 
 		sql = newSQL.String()
 	} else {
+		log.Println(sql)
 		sql = numericPlaceholder.ReplaceAllString(sql, "$$$1$$")
+		log.Println(sql)
 		for idx, v := range vars {
 			sql = strings.Replace(sql, "$"+strconv.Itoa(idx+1)+"$", v, 1)
+			log.Println(idx, v, sql)
 		}
 	}
 
