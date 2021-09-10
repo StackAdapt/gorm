@@ -3,6 +3,7 @@ package logger
 import (
 	"database/sql/driver"
 	"fmt"
+	"log"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -134,9 +135,42 @@ func ExplainSQL(sql string, numericPlaceholder *regexp.Regexp, escaper string, a
 
 		sql = newSQL.String()
 	} else {
-		sql = numericPlaceholder.ReplaceAllString(sql, "%s")
-		sql = fmt.Sprintf(sql, avars...)
+		sql = numericPlaceholder.ReplaceAllString(sql, "$$$1$$")
+
+		sql = ReplaceValues(sql, vars)
 	}
 
 	return sql
+}
+
+func ReplaceValues(sql string, vars []string) string {
+	end := len(sql)
+	result := ""
+	for i := 0; i < end; {
+		lasti := i
+		for i < end && sql[i] != '$' {
+			i++
+		}
+		if i > lasti {
+			result += sql[lasti:i]
+		}
+		if i >= end {
+			// done processing format string
+			break
+		}
+		nextIndex := i + 1
+		for nextIndex < end && sql[nextIndex] != '$' {
+			nextIndex++
+		}
+		if nextIndex >= end || nextIndex == i+1 {
+			continue
+		}
+		log.Println(sql[i+1:nextIndex], i, nextIndex)
+		valIndex, err := strconv.Atoi(sql[i+1 : nextIndex])
+		if err == nil {
+			result += vars[valIndex-1]
+			i = nextIndex + 1
+		}
+	}
+	return result
 }
