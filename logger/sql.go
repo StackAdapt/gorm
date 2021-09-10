@@ -3,7 +3,6 @@ package logger
 import (
 	"database/sql/driver"
 	"fmt"
-	"log"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -165,7 +164,6 @@ func ReplaceValues(sql string, vars []string) string {
 		if nextIndex >= end || nextIndex == i+1 {
 			continue
 		}
-		log.Println(sql[i+1:nextIndex], i, nextIndex)
 		valIndex, err := strconv.Atoi(sql[i+1 : nextIndex])
 		if err == nil {
 			result += vars[valIndex-1]
