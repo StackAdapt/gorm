@@ -134,41 +134,11 @@ func ExplainSQL(sql string, numericPlaceholder *regexp.Regexp, escaper string, a
 
 		sql = newSQL.String()
 	} else {
-		sql = numericPlaceholder.ReplaceAllString(sql, "$$$1$$")
-
-		sql = ReplaceValues(sql, vars)
+		sql = numericPlaceholder.ReplaceAllString(sql, "$$$1$$sagorm")
+		for idx, v := range vars {
+			sql = strings.Replace(sql, "$"+strconv.Itoa(idx+1)+"$sagorm", v, 1)
+		}
 	}
 
 	return sql
-}
-
-func ReplaceValues(sql string, vars []string) string {
-	end := len(sql)
-	result := ""
-	for i := 0; i < end; {
-		lasti := i
-		for i < end && sql[i] != '$' {
-			i++
-		}
-		if i > lasti {
-			result += sql[lasti:i]
-		}
-		if i >= end {
-			// done processing format string
-			break
-		}
-		nextIndex := i + 1
-		for nextIndex < end && sql[nextIndex] != '$' {
-			nextIndex++
-		}
-		if nextIndex >= end || nextIndex == i+1 {
-			continue
-		}
-		valIndex, err := strconv.Atoi(sql[i+1 : nextIndex])
-		if err == nil {
-			result += vars[valIndex-1]
-			i = nextIndex + 1
-		}
-	}
-	return result
 }
