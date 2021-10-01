@@ -101,11 +101,36 @@ func TestExplainSQL(t *testing.T) {
 			Vars:          []interface{}{"jinzhu", 1, 999.9912345, true, []byte("12345"), tt, &tt, nil, "w@g.\"com", myrole, pwd, &js, &es},
 			Result:        fmt.Sprintf(`create table users (name, age, height, actived, bytes, create_at, update_at, deleted_at, email, role, pass, json_struct, example_struct) values ("jinzhu", 1, 999.9912345, true, "12345", "2020-02-23 11:10:10", "2020-02-23 11:10:10", NULL, "w@g.\"com", "admin", "pass", %v, %v)`, format(jsVal, `"`), format(esVal, `"`)),
 		},
+		{
+			SQL:           "create table users (name, age, height, actived, bytes, create_at, update_at, deleted_at, email, role, pass, json_struct, example_struct) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+			NumericRegexp: nil,
+			Vars:          []interface{}{"$1jinzhu", 1, 999.9912345, true, []byte("12345"), tt, &tt, nil, "w@g.\"com", myrole, pwd, &js, &es},
+			Result:        fmt.Sprintf(`create table users (name, age, height, actived, bytes, create_at, update_at, deleted_at, email, role, pass, json_struct, example_struct) values ("$1jinzhu", 1, 999.9912345, true, "12345", "2020-02-23 11:10:10", "2020-02-23 11:10:10", NULL, "w@g.\"com", "admin", "pass", %v, %v)`, format(jsVal, `"`), format(esVal, `"`)),
+		},
 	}
 
 	for idx, r := range results {
 		if result := logger.ExplainSQL(r.SQL, r.NumericRegexp, `"`, r.Vars...); result != r.Result {
 			t.Errorf("Explain SQL #%v expects %v, but got %v", idx, r.Result, result)
+		}
+	}
+}
+
+func TestReplaceValues(t *testing.T) {
+	cases := []struct {
+		origin string
+		vars   []string
+		expect string
+	}{
+		{"$$", []string{}, "$$"},
+		{"123", []string{}, "123"},
+		{"$sagormp1$sagorms", []string{"a"}, "a"},
+		{"$sagormp1", []string{"a"}, "$sagormp1"},
+	}
+
+	for idx, r := range cases {
+		if result := logger.ReplaceValues(r.origin, logger.ReplacePrefix, logger.ReplaceSuffix, r.vars); result != r.expect {
+			t.Errorf("Explain SQL #%v expects %v, but got %v", idx, r.expect, result)
 		}
 	}
 }
