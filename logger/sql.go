@@ -17,6 +17,9 @@ const (
 	tmFmtWithMS = "2006-01-02 15:04:05.999"
 	tmFmtZero   = "0000-00-00 00:00:00"
 	nullStr     = "NULL"
+
+	ReplacePrefix = "$sagormp"
+	ReplaceSuffix = "$sagorms"
 )
 
 var (
@@ -134,11 +137,39 @@ func ExplainSQL(sql string, numericPlaceholder *regexp.Regexp, escaper string, a
 
 		sql = newSQL.String()
 	} else {
-		sql = numericPlaceholder.ReplaceAllString(sql, "$$$1$$sagorm")
-		for idx, v := range vars {
-			sql = strings.Replace(sql, "$"+strconv.Itoa(idx+1)+"$sagorm", v, 1)
-		}
+		sql = numericPlaceholder.ReplaceAllString(sql, "$$sagormp$1$$sagorms")
+
+		sql = ReplaceValues(sql, ReplacePrefix, ReplaceSuffix, vars)
 	}
 
 	return sql
+}
+
+func ReplaceValues(sql, prefix, suffix string, vars []string) string {
+	end := len(sql)
+	result := ""
+	prefixLength := len(prefix)
+	suffixLength := len(suffix)
+	for i := 0; i < end; {
+		prefixIndex := strings.Index(sql[i:], prefix)
+		suffixIndex := strings.Index(sql[i:], suffix)
+		if prefixIndex == -1 || suffixIndex == -1 {
+			result += sql[i:]
+			break
+		}
+		prefixIndex += i
+		suffixIndex += i
+		if prefixIndex > i {
+			result += sql[i:prefixIndex]
+		}
+
+		valIndex, err := strconv.Atoi(sql[prefixIndex+prefixLength : suffixIndex])
+		if err == nil {
+			result += vars[valIndex-1]
+		} else {
+			result += sql[i : suffixIndex+suffixLength]
+		}
+		i = suffixIndex + suffixLength
+	}
+	return result
 }
