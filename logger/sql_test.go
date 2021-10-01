@@ -104,8 +104,8 @@ func TestExplainSQL(t *testing.T) {
 		{
 			SQL:           "create table users (name, age, height, actived, bytes, create_at, update_at, deleted_at, email, role, pass, json_struct, example_struct) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 			NumericRegexp: nil,
-			Vars:          []interface{}{"$1jinzhu", 1, 999.9912345, true, []byte("12345"), tt, &tt, nil, "w@g.\"com", myrole, pwd, &js, &es},
-			Result:        fmt.Sprintf(`create table users (name, age, height, actived, bytes, create_at, update_at, deleted_at, email, role, pass, json_struct, example_struct) values ("$1jinzhu", 1, 999.9912345, true, "12345", "2020-02-23 11:10:10", "2020-02-23 11:10:10", NULL, "w@g.\"com", "admin", "pass", %v, %v)`, format(jsVal, `"`), format(esVal, `"`)),
+			Vars:          []interface{}{"$1$jinzhu", 1, 999.9912345, true, []byte("12345"), tt, &tt, nil, "w@g.\"com", myrole, "0-42cd4d4b-a6ad-48dd-540b-9bb4919420fc$ip$70.126.97.22", &js, &es},
+			Result:        fmt.Sprintf(`create table users (name, age, height, actived, bytes, create_at, update_at, deleted_at, email, role, pass, json_struct, example_struct) values ("$1$jinzhu", 1, 999.9912345, true, "12345", "2020-02-23 11:10:10", "2020-02-23 11:10:10", NULL, "w@g.\"com", "admin", "0-42cd4d4b-a6ad-48dd-540b-9bb4919420fc$ip$70.126.97.22", %v, %v)`, format(jsVal, `"`), format(esVal, `"`)),
 		},
 	}
 
@@ -125,6 +125,7 @@ func TestReplaceValues(t *testing.T) {
 		{"$$", []string{}, "$$"},
 		{"123", []string{}, "123"},
 		{"$sagormp1$sagorms", []string{"a"}, "a"},
+		{"$sagormp1$sagorms", []string{}, "$sagormp1$sagorms"},
 		{"$sagormp1", []string{"a"}, "$sagormp1"},
 	}
 
