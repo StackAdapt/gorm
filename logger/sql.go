@@ -137,9 +137,9 @@ func ExplainSQL(sql string, numericPlaceholder *regexp.Regexp, escaper string, a
 
 		sql = newSQL.String()
 	} else {
-		sql = numericPlaceholder.ReplaceAllString(sql, "$$$1$$sagorm")
-		for idx, v := range vars {
-			sql = strings.Replace(sql, "$"+strconv.Itoa(idx+1)+"$sagorm", v, 1)
+		if len(vars) > 0 {
+			sql = numericPlaceholder.ReplaceAllString(sql, "$$sagormp$1$$sagorms")
+			sql = ReplaceValues(sql, ReplacePrefix, ReplaceSuffix, vars)
 		}
 	}
 
@@ -165,7 +165,7 @@ func ReplaceValues(sql, prefix, suffix string, vars []string) string {
 		}
 
 		valIndex, err := strconv.Atoi(sql[prefixIndex+prefixLength : suffixIndex])
-		if err == nil {
+		if err == nil && valIndex <= len(vars) {
 			result += vars[valIndex-1]
 		} else {
 			result += sql[i : suffixIndex+suffixLength]
